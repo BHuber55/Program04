@@ -20,54 +20,311 @@ class AVLTree : public Drawable
 {
    
    private:
-      AVLTreeNode<T>* root;
+	AVLTreeNode<T>* root;
 
-      bool avlFlag;
-      int sze;
+	//if false do not check.
+	bool avlFlag;
+	int sze;
 
-      int (*compare_items) (T* item_1, T* item_2);
-      int (*compare_keys) (String* key, T* item);
+	int (*compare_items) (T* item_1, T* item_2); 
+	int(*compare_keys) (String* key, T* item);
+	 
+		//Pre:	Must pass valid, non-Null value.
+		//Post: Sets private value root as tNode.
+	void setRootNode(AVLTreeNode<T>* tNode); //you can get by without using these methods, refer to root directly
+		//Pre:  
+		//Post: Returns the private value root.
+	AVLTreeNode<T>* getRootNode();
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns height of the tree from the node passed in.
+	int getHeight(AVLTreeNode<T>* tNode);  //from lab
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns true if tree is balanced, else returns false.
+	bool isBalanced(AVLTreeNode<T>* tNode);
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Deletes tree from the root passed in.
+	void destroyItem(AVLTreeNode<T>* tNode); 
+		//Pre:  
+		//Post: Begins to delete nodes.
+	void destroy();
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns the node passed after insertion and balancing.
+	AVLTreeNode<T>* insertItem(AVLTreeNode<T>* tNode, T* item);
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns a new node after a rotation to the left has occured.
+	AVLTreeNode<T>* rotateLeft(AVLTreeNode<T>* tNode);
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns a new node after a rotation to the right has occured.
+	AVLTreeNode<T>* rotateRight(AVLTreeNode<T>* tNode);
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns a new node, after a double rotation to the left then the right has occured.
+	AVLTreeNode<T>* rotateLeftRight(AVLTreeNode<T>* tNode);
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns a new node, aftera double rotation to the right then left has occured.
+	AVLTreeNode<T>* rotateRightLeft(AVLTreeNode<T>* tNode);
 
-      void setRootNode(AVLTreeNode<T>* tNode); //you can get by without using these methods, refer to root directly
-      AVLTreeNode<T>* getRootNode();
 
-      int getHeight(AVLTreeNode<T>* tNode);  //from lab
-      bool isBalanced(AVLTreeNode<T>* tNode);
 
-      void destroyItem(AVLTreeNode<T>* tNode);
-      void destroy();
 
-      AVLTreeNode<T>* insertItem(AVLTreeNode<T>* tNode, T* item);
+		//Pre:  
+		//Post: 
+	AVLTreeNode<T>* avlFixAddLeft(AVLTreeNode<T>* tNode);
+		//Pre:  
+		//Post: 
+	AVLTreeNode<T>* avlFixAddRight(AVLTreeNode<T>* tNode);
 
-      AVLTreeNode<T>* rotateLeft(AVLTreeNode<T>* tNode);
-      AVLTreeNode<T>* rotateRight(AVLTreeNode<T>* tNode);
-
-      //write and use methods to do each of the four rotations (SR, SL, DLR, DRL)
-
-      AVLTreeNode<T>* avlFixAddLeft(AVLTreeNode<T>* tNode);
-      AVLTreeNode<T>* avlFixAddRight(AVLTreeNode<T>* tNode);
-
-      virtual void drawRec(AVLTreeNode<T>* tNode, Cairo::RefPtr<Cairo::Context> cr, Line* line, int x_parent, int x_curr, int y_curr);
+    virtual void drawRec(AVLTreeNode<T>* tNode, Cairo::RefPtr<Cairo::Context> cr, Line* line, int x_parent, int x_curr, int y_curr);
 
    public:
-      AVLTree(int (*comp_items) (T* item_1, T* item_2), int (*comp_keys) (String* key, T* item));
-      ~AVLTree();
+	//Constructor
+		//Pre:  Must pass valid, non-Null value.
+		//Post: 
+	AVLTree(int (*comp_items) (T* item_1, T* item_2), int (*comp_keys) (String* key, T* item));
+	//Destructor	
+		//Pre: 
+		//Post: Deletes all nodes
+	~AVLTree();
+		//Pre:  
+		//Post: Returns the number of items in the AVLtree.
+	int size();
+		//Pre:  Must pass valid, non-Null value. If item is a duplicate, will not do anything.
+		//Post: Inserts the item into the correct location of the tree. 
+	void insert(T* item);
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns the item, if it exists.
+	T* retrieve(String* sk);
+		//Pre: 	
+		//Post: Returns true if AVLtree is empty, else will return false.
+	bool isEmpty();
+		//Pre: 		
+		//Post: Returns the item at the root of the AVLtree
+	T* getRootItem();
+		//Pre: 
+		//Post: Returns an iterator for the AVLtree.
+	AVLTreeIterator<T>* iterator();
+		//Pre: 	
+		//Post: Returns the height of the tree.
+	int getHeight();
+		//Pre: 
+		//Post: Returns true if tree is balanced, else will return false.
+	bool isBalanced();
 
-      int size();
-      void insert(T* item);
-      T* retrieve(String* sk);
-
-      bool isEmpty();
-      T* getRootItem();
-      AVLTreeIterator<T>* iterator();
-
-      int getHeight();
-      bool isBalanced();
-
-      void draw(Cairo::RefPtr<Cairo::Context> cr, int width, int height);
-      void mouseClicked(int x, int y);
+    void draw(Cairo::RefPtr<Cairo::Context> cr, int width, int height);
+    void mouseClicked(int x, int y);
 
 };
+
+template < class T >
+AVLTree::AVLTree(int(*comp_items) (T* item_1, T* item_2), int(*comp_keys) (String* key, T* item))
+{
+	compare_items = comp_item;
+	compare_keys = comp_keys;
+
+	sze == 0;
+	avlflag = false;
+	root = NULL;
+}
+
+template < class T >
+AVLTree::~AVLTree()
+{
+	destroy();
+}
+
+template < class T >
+int AVLTree::size()
+{
+	return sze;
+}
+
+template < class T >
+void AVLTree::insert(T* item)
+{
+
+}
+
+template < class T >
+T* AVLTree::retrieve(String* sk)
+{
+
+}
+
+template < class T >
+bool AVLTree::isEmpty()
+{
+	return sze == 0;
+}
+
+template < class T >
+T* AVLTree::getRootItem()
+{
+	if (root != NULL)
+	{
+		return root->getItem();
+	}
+
+	return NULL;
+}
+
+template < class T >
+AVLTreeIterator<T>* AVLTree::iterator()
+{
+	AVLTreeIterator<T>* iter = new AVLTreeIterator<T>(root);
+	return iter;
+}
+
+template < class T >
+int AVLTree::getHeight()
+{
+	int height;
+	height = getHeight(root);
+	return height;
+
+}
+
+template < class T >
+bool AVLTree::isBalanced()
+{
+	bool balanced;
+	balanced = isBalanced(root);
+	return balanced;
+}
+
+template < class T >
+AVLTreeNode<T>* AVLTree::avlFixAddLeft(AVLTreeNode<T>* tNode)
+{
+
+}
+
+template < class T >
+AVLTreeNode<T>* AVLTree::avlFixAddRight(AVLTreeNode<T>* tNode)
+{
+
+}
+
+template < class T >
+int AVLTree::getHeight(AVLTreeNode<T>* tNode)  //from lab
+{
+	int LeftHeight;
+	int RightHeight;
+	if (tNode == NULL)
+	{
+		return 0;
+	}
+
+	LeftHeight = getHeight(tNode->getLeft());
+	RightHeight = getHeight(tNode->getRight());
+
+	if (LeftHeight > RightHeight)
+	{
+		return LeftHeight + 1;
+	}
+
+	else
+	{
+		return RightHeight + 1;
+	}
+}
+
+template < class T >
+bool AVLTree::isBalanced(AVLTreeNode<T>* tNode)
+{
+	if (tNode == NULL)
+	{
+		return true;
+	}
+	else
+	{
+		TreeNode<T>* left = tNode->getLeft();
+		TreeNode<T>* right = tNode->getRight();
+		bool leftBalanced = isBalanced(left);
+		bool rightBalanced = isBalanced(right);
+
+		if (leftBalanced == false || rightBalanced == false)
+		{
+			return false;
+		}
+
+		else
+		{
+			int leftHeight = getHeight(left);
+			int rightHeight = getHeight(right);
+			int x = abs(rightHeight - leftHeight);
+
+			if (x < 2)
+			{
+				return true;
+			}
+
+			else
+			{
+				return false;
+			}
+		}
+	}
+}
+
+template < class T >
+void AVLTree::destroyItem(AVLTreeNode<T>* tNode)
+{
+	if (tNode == NULL)
+	{
+		destoryItem(tNode->getLeft());
+		destoryItem(tNode->getRight());
+		delete tNode;
+	}
+}
+
+template < class T >
+void AVLTree::destroy()
+{
+	destroyItems(root);
+	sze = 0;
+	avlflag = false;
+	root = NULL;
+}
+
+template < class T >
+AVLTreeNode<T>* AVLTree::insertItem(AVLTreeNode<T>* tNode, T* item)
+{
+
+}
+
+template < class T >
+AVLTreeNode<T>* AVLTree::rotateLeft(AVLTreeNode<T>* tNode)
+{
+
+}
+
+template < class T >
+AVLTreeNode<T>* AVLTree::rotateRight(AVLTreeNode<T>* tNode)
+{
+
+}
+
+template < class T >
+AVLTreeNode<T>* AVLTree::rotateLeftRight(AVLTreeNode<T>* tNode)
+{
+
+}
+
+template < class T >
+AVLTreeNode<T>* AVLTree::rotateRightLeft(AVLTreeNode<T>* tNode)
+{
+
+}
+
+template < class T >
+void AVLTree::setRootNode(AVLTreeNode<T>* tNode) //you can get by without using these methods, refer to root directly
+{
+
+}
+
+template < class T >
+AVLTreeNode<T>* AVLTree::getRootNode()
+{
+	return root;
+}
 
 
 
