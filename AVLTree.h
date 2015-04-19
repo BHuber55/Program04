@@ -340,17 +340,112 @@ void AVLTree<T>::destroy()
 	root = NULL;
 }
 
-/////GOTTA DO THIS STILL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 template < class T >
 AVLTreeNode<T>* AVLTree<T>::avlFixAddLeft(AVLTreeNode<T>* tNode)
 {
+	tNode->insertLeft();
+	AVL bf = tNode->getBalanceFactor();
 
+	if (bf == BALANCED)
+	{
+		avlFlag = false;
+		return tNode;
+	}
+	else if (bf == LEFT_HEAVY || factor == RIGHT_HEAVY)
+	{
+		//keep going
+		return tNode;
+	}
+	else
+	{
+		if (factor == LEFT_UNBALANCED)
+		{
+			AVLTreeNode<T>* left = tNode->getLeft();
+			AVL bf_l = left->getBalanceFactor();
+			if (bf_l == RIGHT_HEAVY)
+			{
+				//Double left then right
+				tNode = rotateLeftRight(tNode);
+			}
+			else
+			{
+				//single right
+				tNode = rotateRight(tNode);
+			}
+		}
+		else
+		{
+			AVLTreeNode<T>* right = tNode->getRight();
+			AVL bf_r = right->getBalanceFactor();
+			if (bf_r == LEFT_HEAVY)
+			{
+				//double right then left
+				tNode = rotateRightLeft(tNode);
+			}
+			else
+			{
+				//single left
+				tNode = rotateLeft(tNode);
+			}
+		}
+
+		avlFlag = false;
+		return tNode;
+	}
 }
 
 template < class T >
 AVLTreeNode<T>* AVLTree<T>::avlFixAddRight(AVLTreeNode<T>* tNode)
 {
+	tNode->insertRight();
+	AVL bf = tNode->getBalanceFactor();
 
+	if (bf == BALANCED)
+	{
+		avlFlag = false;
+		return tNode;
+	}
+	else if (bf == LEFT_HEAVY || bf == RIGHT_HEAVY)
+	{
+		//keep going
+		return tNode;
+	}
+	else
+	{
+		if (bf == LEFT_UNBALANCED)
+		{
+			AVLTreeNode<T>* left = tNode->getLeft();
+			AVL bf_l = left->getBalanceFactor();
+			if (bf_l == RIGHT_HEAVY)
+			{
+				//Double left then right
+				tNode = rotateLeftRight(tNode);
+			}
+			else
+			{
+				//single right
+				tNode = rotateRight(tNode);
+			}
+		}
+		else
+		{
+			AVLTreeNode<T>* right = tNode->getRight();
+			AVL bf_r = right->getBalanceFactor();
+			if (bf_r == LEFT_HEAVY)
+			{
+				//double right then left
+				tNode = rotateRightLeft(tNode);
+			}
+			else
+			{
+				//single left
+				tNode = rotateLeft(tNode);
+			}
+		}
+
+		avlFlag = false;
+		return tNode;
+	}
 }
 
 template < class T >
@@ -402,7 +497,8 @@ AVLTreeNode<T>* AVLTree<T>::rotateLeftRight(AVLTreeNode<T>* tNode)
 	tNode->setLeft(l_r_r);
 	l->setRight(l_r_l);
 
-	//check flags or whateverrrr
+	//check flags or whateverrrr.............................
+	
 
 	return l_r;
 }
@@ -421,25 +517,12 @@ AVLTreeNode<T>* AVLTree<T>::rotateRightLeft(AVLTreeNode<T>* tNode)
 	r->setLeft(r_l_r);
 	tNode->setRight(r_l_l);
 
-	//check flags.
+	//check flags...................................
 
 	return r_l;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 //the below GUI-related methods have been completed for you
-
 template < class T >
 void AVLTree<T>::draw(Cairo::RefPtr<Cairo::Context> cr, int width, int height)
 {
