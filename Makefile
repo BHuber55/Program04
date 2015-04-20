@@ -15,17 +15,11 @@ LIBS = -lCSC2110 -lgui -lgtkmm-3.0 -latkmm-1.6 -lgdkmm-3.0 -lgiomm-2.4 -lpangomm
 COMPILE = $(CC) $(INC_DIRS) -c
 LINK = $(CC) $(LIB_DIRS) -o
 
-#Not sure if i need this or not.. we will see.
-FILES_1 = AVLDriver.o
-FILES_2 = DrawAVLTree.o
-
 all: Project
 
 Project: 	$(FILES)
 		$(LINK) $(EXECUTABLE) $(FILES) $(LIBS)
 
-#AVLDriver.o: AVLTree.h AVLTreeIterator.h AVLDriver.cpp
-#				$(COMPILE)	AVLDriver.cpp
 DrawAVLTree.o:	AVLTree.h DrawAVLTree.cpp
 		$(COMPILE) DrawAVLTree.cpp
 
