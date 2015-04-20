@@ -24,8 +24,8 @@ all: Project
 Project: 	$(FILES)
 		$(LINK) $(EXECUTABLE) $(FILES) $(LIBS)
 
-AVLDriver.o: AVLTree.h AVLTreeIterator.h AVLDriver.cpp
-				$(COMPILE)	AVLDriver.cpp
+#AVLDriver.o: AVLTree.h AVLTreeIterator.h AVLDriver.cpp
+#				$(COMPILE)	AVLDriver.cpp
 DrawAVLTree.o:	AVLTree.h DrawAVLTree.cpp
 		$(COMPILE) DrawAVLTree.cpp
 
