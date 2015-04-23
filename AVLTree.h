@@ -43,7 +43,7 @@ private:
 		//Post: Deletes tree from the root passed in.
 	void destroyItem(AVLTreeNode<T>* tNode); 
 		//Pre:  
-		//Post: Begins to delete nodes.
+		//Post: Begins to delete everything.
 	void destroy();
 		//Pre:  Must pass valid, non-Null value.
 		//Post: Returns the node passed after insertion and balancing.
@@ -60,15 +60,11 @@ private:
 		//Pre:  Must pass valid, non-Null value.
 		//Post: Returns a new node, aftera double rotation to the right then left has occured.
 	AVLTreeNode<T>* rotateRightLeft(AVLTreeNode<T>* tNode);
-
-
-
-
-		//Pre:  
-		//Post: 
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns the 'root' node after all the necessary rotation have been applied in order to make the tree a valid AVL tree. (fixes if there was an insertion to the left)
 	AVLTreeNode<T>* avlFixAddLeft(AVLTreeNode<T>* tNode);
-		//Pre:  
-		//Post: 
+		//Pre:  Must pass valid, non-Null value.
+		//Post: Returns the 'root' node after all the necessary rotation have been applied in order to make the tree a valid AVL tree. (fixes if there was an insertion to the right)
 	AVLTreeNode<T>* avlFixAddRight(AVLTreeNode<T>* tNode);
 
     virtual void drawRec(AVLTreeNode<T>* tNode, Cairo::RefPtr<Cairo::Context> cr, Line* line, int x_parent, int x_curr, int y_curr);
@@ -172,7 +168,6 @@ AVLTreeIterator<T>* AVLTree<T>::iterator()
 	return iter;
 }
 
-
 template < class T >
 int AVLTree<T>::getHeight(AVLTreeNode<T>* tNode)  //from lab
 {
@@ -181,7 +176,7 @@ int AVLTree<T>::getHeight(AVLTreeNode<T>* tNode)  //from lab
 	{
 		return 0;
 	}
-
+	//Declaring local variables.
 	AVLTreeNode<T>* l = tNode->getLeft();
 	AVLTreeNode<T>* r = tNode->getRight();
 
@@ -215,7 +210,7 @@ bool AVLTree<T>::isBalanced(AVLTreeNode<T>* tNode)
 	{
 		return true;
 	}
-
+	//Declaring local variables.
 	AVLTreeNode<T>* l = tNode->getLeft();
 	AVLTreeNode<T>* r = tNode->getRight();
 	bool l_b = isBalanced(l);
@@ -252,11 +247,10 @@ AVLTreeNode<T>* AVLTree<T>::insertItem(AVLTreeNode<T>* tNode, T* item)
 	//base case
 	if(tNode == NULL)
 	{
-		//AVLTreeNode<T>* new_node = new AVLTreeNode<T>(item);
+		AVLTreeNode<T>* new_node = new AVLTreeNode<T>(item);
 		sze++;
 		avlFlag = true;
-		//return new_node;
-		return new AVLTreeNode<T>(item);
+		return new_node;
 	}
 
 	int comp = (*compare_items)(item, tNode->getItem());
@@ -267,27 +261,44 @@ AVLTreeNode<T>* AVLTree<T>::insertItem(AVLTreeNode<T>* tNode, T* item)
 		//so just return it.
 		return tNode;
 	}
-	else if (comp < 0)
+	else if (comp < 0) 
 	{
 		AVLTreeNode<T>* l = tNode->getLeft();
-		tNode->setLeft(insertItem(l, item));
+		AVLTreeNode<T>* subtree = insertItem(l, item);
+		tNode->setLeft(subtree);
 		if(avlFlag)
 		{
-			tNode = avlFixAddLeft(tNode);
+			tNode->insertLeft();
 		}
 	}
-	else
+	else if (comp > 0)
 	{
 		AVLTreeNode<T>* r = tNode->getRight();
-		tNode->setRight(insertItem(r, item));
-		if(avlFlag)
+		AVLTreeNode<T>* subtree = insertItem(r, item);
+		tNode->setRight(subtree);
+		if (avlFlag)
 		{
-			tNode = avlFixAddRight(tNode);
+			tNode->insertRight();
 		}
+	}
+	
+	//Need to set the flag to false on all of these.
+	if (tNode->getBalanceFactor() == BALANCED)
+	{
+		avlFlag = false;
+	}
+	else if (tNode->getBalanceFactor() == LEFT_UNBALANCED)
+	{
+		tNode = avlFixAddLeft(tNode);
+		avlFlag = false;
+	}
+	else if (tNode->getBalanceFactor() == RIGHT_UNBALANCED)
+	{
+		tNode = avlFixAddRight(tNode);
+		avlFlag = false;
 	}
 
 	return tNode;
-
 }
 
 template < class T >
@@ -352,109 +363,86 @@ void AVLTree<T>::destroy()
 template < class T >
 AVLTreeNode<T>* AVLTree<T>::avlFixAddLeft(AVLTreeNode<T>* tNode)
 {
-	tNode->insertLeft();
-	AVL bf = tNode->getBalanceFactor();
+	//Declaring local variables.
+	AVLTreeNode<T>* subtree;
+	AVLTreeNode<T>* left = tNode->getLeft();
+	AVL bf = left->getBalanceFactor();
 
-	if (bf == BALANCED)
+	if (bf == LEFT_HEAVY)
 	{
-		avlFlag = false;
-		return tNode;
-	}
-	else if (bf == LEFT_HEAVY || bf == RIGHT_HEAVY)
-	{
-		//keep going
-		return tNode;
+		subtree = rotateRight(tNode);
 	}
 	else
 	{
-		if (bf == LEFT_UNBALANCED)
-		{
-			AVLTreeNode<T>* left = tNode->getLeft();
-			AVL bf_l = left->getBalanceFactor();
-			if (bf_l == RIGHT_HEAVY)
-			{
-				//Double left then right
-				tNode = rotateLeftRight(tNode);
-			}
-			else
-			{
-				//single right
-				tNode = rotateRight(tNode);
-			}
-		}
-		else if (bf == RIGHT_UNBALANCED)
-		{
-			AVLTreeNode<T>* right = tNode->getRight();
-			AVL bf_r = right->getBalanceFactor();
-			if (bf_r == LEFT_HEAVY)
-			{
-				//double right then left
-				tNode = rotateRightLeft(tNode);
-			}
-			else
-			{
-				//single left
-				tNode = rotateLeft(tNode);
-			}
-		}
+		AVLTreeNode<T>* left_right = left->getRight();
+		AVL bf_lr = left_right->getBalanceFactor();
 
-		avlFlag = false;
-		return tNode;
+		tNode->setLeft(rotateLeft(left));
+		subtree = rotateRight(tNode);
+
+		if (bf_lr == LEFT_HEAVY)
+		{
+			tNode->setBalanceFactor(RIGHT_HEAVY);
+			left->setBalanceFactor(BALANCED);
+			left_right->setBalanceFactor(BALANCED);
+		}
+		else if (bf_lr == RIGHT_HEAVY)
+		{
+			tNode->setBalanceFactor(BALANCED);
+			left->setBalanceFactor(LEFT_HEAVY);
+			left_right->setBalanceFactor(BALANCED);
+		}
+		else
+		{
+			tNode->setBalanceFactor(BALANCED);
+			left->setBalanceFactor(BALANCED);
+			left_right->setBalanceFactor(BALANCED);
+		}
 	}
+
+	return subtree;
 }
 
 template < class T >
 AVLTreeNode<T>* AVLTree<T>::avlFixAddRight(AVLTreeNode<T>* tNode)
 {
-	tNode->insertRight();
-	AVL bf = tNode->getBalanceFactor();
+	AVLTreeNode<T>* subtree;
+	AVLTreeNode<T>* right = tNode->getRight();
+	AVL bf = right->getBalanceFactor();
 
-	if (bf == BALANCED)
+	if (bf == RIGHT_HEAVY)
 	{
-		avlFlag = false;
-		return tNode;
-	}
-	else if (bf == LEFT_HEAVY || bf == RIGHT_HEAVY)
-	{
-		//keep going
-		return tNode;
+		subtree = rotateLeft(tNode);
 	}
 	else
 	{
-		if (bf == LEFT_UNBALANCED)
-		{
-			AVLTreeNode<T>* left = tNode->getLeft();
-			AVL bf_l = left->getBalanceFactor();
-			if (bf_l == RIGHT_HEAVY)
-			{
-				//Double left then right
-				tNode = rotateLeftRight(tNode);
-			}
-			else
-			{
-				//single right
-				tNode = rotateRight(tNode);
-			}
-		}
-		else if (bf == RIGHT_UNBALANCED)
-		{
-			AVLTreeNode<T>* right = tNode->getRight();
-			AVL bf_r = right->getBalanceFactor();
-			if (bf_r == LEFT_HEAVY)
-			{
-				//double right then left
-				tNode = rotateRightLeft(tNode);
-			}
-			else
-			{
-				//single left
-				tNode = rotateLeft(tNode);
-			}
-		}
+		AVLTreeNode<T>* right_left = right->getLeft();
+		AVL bf_rl = right_left->getBalanceFactor();
 
-		avlFlag = false;
-		return tNode;
+		tNode->setRight(rotateRight(right));
+		subtree = rotateLeft(tNode);
+
+		if (bf_rl == LEFT_HEAVY)
+		{
+			tNode->setBalanceFactor(RIGHT_HEAVY);
+			right->setBalanceFactor(BALANCED);
+			right_left->setBalanceFactor(BALANCED);
+		}
+		else if (bf_rl == RIGHT_HEAVY)
+		{
+			tNode->setBalanceFactor(BALANCED);
+			right->setBalanceFactor(LEFT_HEAVY);
+			right_left->setBalanceFactor(BALANCED);
+		}
+		else
+		{
+			tNode->setBalanceFactor(BALANCED);
+			right->setBalanceFactor(BALANCED);
+			right_left->setBalanceFactor(BALANCED);
+		}
 	}
+
+	return subtree;
 }
 
 template < class T >
@@ -463,7 +451,7 @@ AVLTreeNode<T>* AVLTree<T>::rotateLeft(AVLTreeNode<T>* tNode)
 	//All the nodes I need for rotation
 	AVLTreeNode<T>* p = tNode;
 	AVLTreeNode<T>* r = p->getRight();
-	AVLTreeNode<T>* r_l = r->getLeft();			//check this ... this was get right
+	AVLTreeNode<T>* r_l = r->getLeft();
 
 	//actually rotating.
 	r->setLeft(p);
@@ -508,31 +496,26 @@ AVLTreeNode<T>* AVLTree<T>::rotateLeftRight(AVLTreeNode<T>* tNode)
 	tNode->setLeft(l_r_r);
 	l_r->setLeft(l);
 	l_r->setRight(tNode);
-
-	//check flags or whateverrrr.....DOUBLE CHECK THIS.............
 	
+
+	//Checking the balance factors..
 	AVL l_rf = l_r->getBalanceFactor();
 	l_r->setBalanceFactor(BALANCED);
 	l->setBalanceFactor(BALANCED);
+
+	//modifying the balance factors
 	if (l_rf == LEFT_HEAVY)
 	{
 		tNode->setBalanceFactor(RIGHT_HEAVY);
+	}
+	else if (l_rf == RIGHT_HEAVY)
+	{
+		l->setBalanceFactor(LEFT_HEAVY);
 	}
 	else
 	{
 		tNode->setBalanceFactor(BALANCED);
 	}
-
-	if (r != NULL)
-	{
-		AVL rf = r->getBalanceFactor();
-		if (rf == RIGHT_HEAVY && l_rf == RIGHT_HEAVY)
-		{
-			r->setBalanceFactor(LEFT_HEAVY);
-		}
-	}
-
-
 
 	return l_r;
 }
@@ -552,28 +535,25 @@ AVLTreeNode<T>* AVLTree<T>::rotateRightLeft(AVLTreeNode<T>* tNode)
 	r_l->setLeft(tNode);
 	r_l->setRight(r);
 
-	//check flags....... DOUBLE CHECK THIS.............
 	
+	//check flags....... DOUBLE CHECK THIS.............
 	AVL r_lf = r_l->getBalanceFactor();
 	r_l->setBalanceFactor(BALANCED);
 	r->setBalanceFactor(BALANCED);
+
+	//modifying the balance factors.
 	if (r_lf == RIGHT_HEAVY)
 	{
 		tNode->setBalanceFactor(LEFT_HEAVY);
+	}
+	else if (r_lf == LEFT_HEAVY)
+	{
+		r->setBalanceFactor(RIGHT_HEAVY);
 	}
 	else
 	{
 		tNode->setBalanceFactor(BALANCED);
 	}
-	if (l != NULL)
-	{
-		AVL lf = l->getBalanceFactor();
-		if (lf == LEFT_HEAVY && r_lf == LEFT_HEAVY)
-		{
-			l->setBalanceFactor(RIGHT_HEAVY);
-		}
-	}
-	
 
 	return r_l;
 }
